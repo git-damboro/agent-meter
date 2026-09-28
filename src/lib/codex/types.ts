@@ -139,34 +139,39 @@ export type CodexHttpUsageResponse = z.infer<
   typeof codexHttpUsageResponseSchema
 >;
 
-export interface CodexQuotaWindow {
-  usedPercent: number;
-  windowDurationMins?: number;
-  resetsAt?: number;
-}
+export const codexQuotaWindowSchema = z.object({
+  usedPercent: z.number(),
+  windowDurationMins: z.number().optional(),
+  resetsAt: z.number().optional(),
+});
 
-export interface CodexUsageSnapshot {
-  source: "codex";
-  fetchedAt: string;
-  account: {
-    email?: string;
-    planType?: string;
-  };
-  summary: {
-    lifetimeTokens?: number;
-    peakDailyTokens?: number;
-    longestRunningTurnSec?: number;
-    currentStreakDays?: number;
-    longestStreakDays?: number;
-  };
-  daily: Array<{
-    date: string;
-    tokens: number;
-  }>;
-  quota: {
-    ordinaryUsageAllowed?: boolean;
-    primary?: CodexQuotaWindow;
-    secondary?: CodexQuotaWindow;
-    availableResetCredits?: number;
-  };
-}
+export const codexUsageSnapshotSchema = z.object({
+  source: z.literal("codex"),
+  fetchedAt: z.string(),
+  account: z.object({
+    email: z.string().optional(),
+    planType: z.string().optional(),
+  }),
+  summary: z.object({
+    lifetimeTokens: z.number().optional(),
+    peakDailyTokens: z.number().optional(),
+    longestRunningTurnSec: z.number().optional(),
+    currentStreakDays: z.number().optional(),
+    longestStreakDays: z.number().optional(),
+  }),
+  daily: z.array(
+    z.object({
+      date: z.string(),
+      tokens: z.number(),
+    }),
+  ),
+  quota: z.object({
+    ordinaryUsageAllowed: z.boolean().optional(),
+    primary: codexQuotaWindowSchema.optional(),
+    secondary: codexQuotaWindowSchema.optional(),
+    availableResetCredits: z.number().optional(),
+  }),
+});
+
+export type CodexQuotaWindow = z.infer<typeof codexQuotaWindowSchema>;
+export type CodexUsageSnapshot = z.infer<typeof codexUsageSnapshotSchema>;

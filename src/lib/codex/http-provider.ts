@@ -77,6 +77,9 @@ interface CodexHttpProviderOptions {
   now?: () => Date;
   requestTimeoutMs?: number;
   endpoints?: Partial<CodexHttpEndpoints>;
+  onCredentialRefreshed?: (
+    credential: CodexOAuthCredential,
+  ) => void | Promise<void>;
 }
 
 interface ResolvedCredential {
@@ -115,6 +118,7 @@ export async function fetchCodexUsageWithCredential(
       requestTimeoutMs,
       now,
     );
+    await options.onCredentialRefreshed?.(activeCredential);
     wasRefreshed = true;
   }
 
@@ -152,6 +156,7 @@ export async function fetchCodexUsageWithCredential(
       requestTimeoutMs,
       now,
     );
+    await options.onCredentialRefreshed?.(activeCredential);
     resolved = await resolveCredential(
       activeCredential,
       fetchImpl,
