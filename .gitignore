@@ -21,6 +21,8 @@
 
 # production
 /build
+/.dist/
+/.agent-meter/
 
 # misc
 .DS_Store

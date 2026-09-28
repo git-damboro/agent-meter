@@ -418,14 +418,14 @@ export function AgentMeterDashboard() {
                 <Activity aria-hidden="true" size={18} />
                 <strong>Codex Plus</strong>
               </div>
-              <p>官方 app-server</p>
+              <p>只读订阅快照</p>
               <span>
                 {codex
                   ? `最近同步 ${new Date(codex.fetchedAt).toLocaleTimeString("zh-CN", {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}`
-                  : "等待本机登录"}
+                  : "等待首次同步"}
               </span>
             </div>
             <div className="source-detail">
@@ -474,10 +474,10 @@ export function AgentMeterDashboard() {
         <section className="privacy-section" id="privacy">
           <ShieldCheck aria-hidden="true" size={20} />
           <div>
-            <h2>本地数据边界</h2>
+            <h2>数据隔离边界</h2>
             <p>
-              Codex 登录由官方 CLI 管理；导入文件只在浏览器解析。AgentMeter
-              不接收 OAuth Token，也不上传原始表格。
+              Codex 凭据仅在本机或独立采集进程中使用；公开接口只返回脱敏快照。
+              导入文件只在浏览器解析，不上传原始表格。
             </p>
           </div>
         </section>
@@ -609,7 +609,7 @@ function getSourceSubtitle(
       ? `CSV / XLSX · ${workspace.records.length} 条记录`
       : "CSV / XLSX · 本地解析";
   }
-  return `${codex?.account.planType?.toUpperCase() ?? "CHATGPT"} · 官方本机登录态`;
+  return `${codex?.account.planType?.toUpperCase() ?? "CHATGPT"} · 订阅用量快照`;
 }
 
 function formatWindowLabel(minutes?: number): string {

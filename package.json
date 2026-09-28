@@ -4,8 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "build": "next build && npm run build:collector && npm run build:standalone-assets",
+    "build:collector": "esbuild scripts/collector.ts --bundle --platform=node --format=esm --target=node22 --outfile=.dist/collector.mjs",
+    "build:standalone-assets": "node scripts/prepare-standalone.mjs",
+    "collector": "node .dist/collector.mjs",
+    "start": "node .next/standalone/server.js",
     "lint": "eslint",
     "test": "vitest run",
     "test:e2e": "playwright test"
@@ -29,6 +32,7 @@
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
     "tailwindcss": "^4",

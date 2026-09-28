@@ -1,0 +1,58 @@
+services:
+  web:
+    build:
+      context: .
+    image: agent-meter:local
+    environment:
+      AGENT_METER_DATA_DIR: /data
+      AGENT_METER_PUBLIC_ORIGIN: ${AGENT_METER_PUBLIC_ORIGIN:-}
+      AGENT_METER_USAGE_MODE: snapshot
+      HOSTNAME: 0.0.0.0
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "${AGENT_METER_PORT:-3000}:3000"
+    volumes:
+      - agent-meter-public:/data:ro
+    depends_on:
+      collector:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+  collector:
+    build:
+      context: .
+    image: agent-meter:local
+    command: ["node", "collector.mjs"]
+    environment:
+      AGENT_METER_COLLECT_INTERVAL_SECONDS: ${AGENT_METER_COLLECT_INTERVAL_SECONDS:-3600}
+      AGENT_METER_CREDENTIALS_PATH: /private/codex-credentials.json
+      AGENT_METER_DATA_DIR: /data
+      CODEX_ACCESS_TOKEN: ${CODEX_ACCESS_TOKEN:-}
+      CODEX_ACCOUNT_EMAIL: ${CODEX_ACCOUNT_EMAIL:-}
+      CODEX_ACCOUNT_ID: ${CODEX_ACCOUNT_ID:-}
+      CODEX_CREDENTIAL_VERSION: ${CODEX_CREDENTIAL_VERSION:-}
+      CODEX_PERSONAL_ACCESS_TOKEN: ${CODEX_PERSONAL_ACCESS_TOKEN:-}
+      CODEX_PLAN_TYPE: ${CODEX_PLAN_TYPE:-}
+      CODEX_REFRESH_TOKEN: ${CODEX_REFRESH_TOKEN:-}
+      NODE_ENV: production
+    volumes:
+      - agent-meter-public:/data
+      - agent-meter-private:/private
+    restart: unless-stopped
+
+volumes:
+  agent-meter-private:
+  agent-meter-public:

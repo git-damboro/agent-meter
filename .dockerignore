@@ -1,0 +1,12 @@
+.git
+.github
+.next
+.dist
+.agent-meter
+node_modules
+playwright-report
+test-results
+.env
+.env.*
+npm-debug.log*
+README.md

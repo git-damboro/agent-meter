@@ -153,6 +153,78 @@ describe("fetchCodexUsageWithCredential", () => {
     });
   });
 
+  it("uses a still-valid access token when proactive refresh is temporarily unavailable", async () => {
+    const expiringAccessToken = makeJwt(
+      Math.floor(now.getTime() / 1000) + 30,
+    );
+    const fetchImpl = vi.fn<typeof fetch>(async (input, init) => {
+      const url = input.toString();
+      if (url === endpoints.refresh) {
+        return jsonResponse({}, 503);
+      }
+      expect(new Headers(init?.headers).get("authorization")).toBe(
+        `Bearer ${expiringAccessToken}`,
+      );
+      if (url === endpoints.profile) {
+        return jsonResponse({
+          stats: {
+            lifetime_tokens: 99,
+            daily_usage_buckets: [],
+          },
+        });
+      }
+      if (url === endpoints.usage) {
+        return jsonResponse({
+          plan_type: "plus",
+          rate_limit: {},
+        });
+      }
+      throw new Error(`Unexpected URL: ${url}`);
+    });
+    const credential = {
+      type: "oauth" as const,
+      accessToken: expiringAccessToken,
+      refreshToken: "refresh-old",
+      accountId: "account-2",
+    };
+
+    const result = await fetchCodexUsageWithCredential(credential, {
+      endpoints,
+      fetchImpl,
+      now: () => now,
+    });
+
+    expect(result.snapshot.summary.lifetimeTokens).toBe(99);
+    expect(result.credential).toEqual(credential);
+  });
+
+  it("classifies a rejected OAuth refresh without exposing its body", async () => {
+    const leakedValue = "refresh-never-log-this";
+    const fetchImpl = vi.fn<typeof fetch>(async () =>
+      jsonResponse({ error: leakedValue }, 400),
+    );
+
+    let thrown: unknown;
+    try {
+      await fetchCodexUsageWithCredential(
+        {
+          type: "oauth",
+          refreshToken: "refresh-old",
+          accountId: "account-2",
+        },
+        { endpoints, fetchImpl, now: () => now },
+      );
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toMatchObject({
+      code: "CODEX_AUTH_REQUIRED",
+      status: 400,
+    });
+    expect(String(thrown)).not.toContain(leakedValue);
+  });
+
   it("never includes an upstream response body in provider errors", async () => {
     const leakedValue = "at-never-log-this";
     const fetchImpl = vi.fn<typeof fetch>(async () =>

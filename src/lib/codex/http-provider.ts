@@ -111,15 +111,21 @@ export async function fetchCodexUsageWithCredential(
     activeCredential.type === "oauth" &&
     shouldRefreshAccessToken(activeCredential, now())
   ) {
-    activeCredential = await refreshOAuthCredential(
-      activeCredential,
-      fetchImpl,
-      endpoints.refresh,
-      requestTimeoutMs,
-      now,
-    );
-    await options.onCredentialRefreshed?.(activeCredential);
-    wasRefreshed = true;
+    try {
+      activeCredential = await refreshOAuthCredential(
+        activeCredential,
+        fetchImpl,
+        endpoints.refresh,
+        requestTimeoutMs,
+        now,
+      );
+      await options.onCredentialRefreshed?.(activeCredential);
+      wasRefreshed = true;
+    } catch (error) {
+      if (!activeCredential.accessToken) {
+        throw error;
+      }
+    }
   }
 
   let resolved = await resolveCredential(
@@ -294,9 +300,9 @@ async function refreshOAuthCredential(
     );
   }
 
-  const refreshed = parsePayload(
-    oauthRefreshResponseSchema,
-    await requestJson(
+  let payload: unknown;
+  try {
+    payload = await requestJson(
       endpoint,
       {
         method: "POST",
@@ -312,8 +318,21 @@ async function refreshOAuthCredential(
       },
       fetchImpl,
       requestTimeoutMs,
-    ),
-  );
+    );
+  } catch (error) {
+    if (
+      error instanceof CodexProviderError &&
+      (error.code === "CODEX_AUTH_REQUIRED" || error.status === 400)
+    ) {
+      throw new CodexProviderError(
+        "CODEX_AUTH_REQUIRED",
+        "Codex OAuth refresh token was rejected.",
+        error.status,
+      );
+    }
+    throw error;
+  }
+  const refreshed = parsePayload(oauthRefreshResponseSchema, payload);
 
   return {
     ...credential,
