@@ -59,5 +59,9 @@ app-server child process after the request.
 
 ## Status
 
-Early development. The import core and Codex app-server adapter are available;
-the dashboard UI is in progress.
+The first local dashboard is available:
+
+- Codex lifetime, peak, streak, daily activity, and quota windows.
+- Workspace CSV/XLSX totals, cost, date range, trend, and activity intensity.
+- Daily, weekly, and cumulative chart modes.
+- Local browser persistence for imported workspace aggregates.
