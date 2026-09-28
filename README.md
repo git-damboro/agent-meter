@@ -29,7 +29,18 @@ npm run dev
 
 Open <http://localhost:3000>.
 
+## Workspace Import
+
+Export the source sheet as CSV or XLSX. AgentMeter detects the header row and
+uses these columns:
+
+- Required: `日期`, `Token消耗`
+- Optional: `成本(RMB)`, `曲线`, `部门`, `模型大类`, `模型`, `数据状态`
+
+Rows are normalized and aggregated by date in the browser. A synthetic example
+is available at `public/examples/bytedance-token-sample.csv`.
+
 ## Status
 
-Early development. The public repository currently contains the application
-scaffold and source integration design.
+Early development. The import core is available; the Codex app-server adapter
+and dashboard UI are in progress.
