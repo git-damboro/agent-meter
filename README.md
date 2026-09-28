@@ -40,7 +40,24 @@ uses these columns:
 Rows are normalized and aggregated by date in the browser. A synthetic example
 is available at `public/examples/bytedance-token-sample.csv`.
 
+## Codex Connection
+
+AgentMeter uses the official `@openai/codex` app-server methods:
+
+- `account/usage/read` for lifetime totals, daily buckets, streaks, and peaks.
+- `account/rateLimits/read` for current quota windows and reset times.
+
+A normal OpenAI API key cannot read ChatGPT Plus quota. Sign in through the
+official Codex CLI instead:
+
+```bash
+npx codex login --device-auth
+```
+
+AgentMeter then reuses that local login for each refresh and closes the
+app-server child process after the request.
+
 ## Status
 
-Early development. The import core is available; the Codex app-server adapter
-and dashboard UI are in progress.
+Early development. The import core and Codex app-server adapter are available;
+the dashboard UI is in progress.
